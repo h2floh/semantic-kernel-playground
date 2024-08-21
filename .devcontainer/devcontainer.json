@@ -14,7 +14,8 @@
                 "eamodio.gitlens",
                 "ms-dotnettools.csdevkit",
                 "ms-dotnettools.vscode-dotnet-runtime",
-                "ms-azuretools.vscode-docker"
+                "ms-azuretools.vscode-docker",
+                "humao.rest-client"
             ]
         }
     },

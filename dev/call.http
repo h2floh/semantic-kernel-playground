@@ -2,5 +2,14 @@ POST https://localhost:5001/message HTTP/1.1
 content-type: application/json
 
 {
-    "message": "echo"
+    "message": "Hello"
+}
+
+###
+
+POST https://localhost:5001/message HTTP/1.1
+content-type: application/json
+
+{
+    "message": "Can you create me tfvars configuration file for aztfmod creating a VM?"
 } 

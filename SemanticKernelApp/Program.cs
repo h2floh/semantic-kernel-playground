@@ -1,3 +1,4 @@
+using Azure.AI.OpenAI;
 using Azure.Identity;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -39,11 +40,30 @@ semanticBuilder.Services.AddLogging(services => services.AddConsole().SetMinimum
 Kernel kernel = semanticBuilder.Build();
 var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
 
+var azureSearchExtensionConfigurationCE = new AzureSearchChatExtensionConfiguration
+{
+    SearchEndpoint = new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!),
+    Authentication = new OnYourDataApiKeyAuthenticationOptions(app.Configuration["AZURE-AI-SEARCH-API-KEY"]!),
+    IndexName = app.Configuration["AZURE_AI_SEARCH_INDEX_CE"]!
+};
+
+var azureSearchExtensionConfigurationAZTFMOD = new AzureSearchChatExtensionConfiguration
+{
+    SearchEndpoint = new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!),
+    Authentication = new OnYourDataApiKeyAuthenticationOptions(app.Configuration["AZURE-AI-SEARCH-API-KEY"]!),
+    IndexName = app.Configuration["AZURE_AI_SEARCH_INDEX_AZTFMOD"]!
+};
+
+var chatExtensionsOptions = new AzureChatExtensionsOptions { Extensions = { azureSearchExtensionConfigurationAZTFMOD } };
+
 // Enable planning
+#pragma warning disable SKEXP0010
 OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new() 
 {
-    ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+    ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+    AzureChatExtensionsOptions = chatExtensionsOptions
 };
+#pragma warning restore SKEXP0010
 
 // Create a history store the conversation
 var history = new ChatHistory();

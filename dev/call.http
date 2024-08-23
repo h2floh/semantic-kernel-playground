@@ -12,4 +12,13 @@ content-type: application/json
 
 {
     "message": "Can you create a configuration file for adding a VM to the spoke2 network?"
-} 
+}
+
+###
+
+POST https://localhost:5001/message HTTP/1.1
+content-type: application/json
+
+{
+    "message": "Can you create the neccessary configuration for an container app application landingzone?"
+}

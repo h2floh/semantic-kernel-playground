@@ -4,12 +4,6 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.Text.Json;
-using Azure;
-using Azure.Search.Documents;
-using Azure.Search.Documents.Indexes;
-using Azure.Search.Documents.Models;
-using AzureAISearchIndices;
-using System.Runtime.Versioning;
 using Resources;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -64,10 +58,6 @@ var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
 
 // var chatExtensionsOptions = new AzureChatExtensionsOptions { Extensions = { azureSearchExtensionConfigurationAZTFMOD } };
 
-// Prepare Azure Search
-var indexCE =  app.Configuration["AZURE_AI_SEARCH_INDEX_CE"]!;
-AzureKeyCredential credential = new AzureKeyCredential(app.Configuration["AZURE-AI-SEARCH-API-KEY"]!);
-SearchClient searchClientCE = new SearchClient(new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!), indexCE, credential);
 
 
 // Enable planning
@@ -75,6 +65,7 @@ SearchClient searchClientCE = new SearchClient(new Uri(app.Configuration["AZURE_
 OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new() 
 {
     ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+    ResponseFormat = ChatCompletionsResponseFormat.JsonObject,
     //AzureChatExtensionsOptions = chatExtensionsOptions
 };
 #pragma warning restore SKEXP0010
@@ -85,6 +76,7 @@ var function = kernel.CreateFunctionFromPromptYaml(generateCEConfigYaml);
 
 // Create a history store the conversation
 var history = new ChatHistory();
+var ragHelper = new RAGHelpers.RAGHelpers(app);
 
 app.MapPost("/message", async (Message message) =>
 {
@@ -98,18 +90,11 @@ app.MapPost("/message", async (Message message) =>
     //     executionSettings: openAIPromptExecutionSettings,
     //     kernel: kernel);
 
-    // Prepare context for invocation
-    SearchOptions options = new SearchOptions
-    {
-        Size = 5 // Take only 5 results
-    };
-    SearchResults<CEIndex> responseCE = searchClientCE.Search<CEIndex>(message.message, options);
-
     // Invoke the prompt
     var result = await kernel.InvokeAsync(function, arguments: new()
     {
-        { "ce_configuration", responseCE.GetResults().FirstOrDefault()?.Document.Content ?? string.Empty },
-        { "aztfmod_configuration", responseCE.GetResults().FirstOrDefault()?.Document.Content ?? string.Empty },
+        { "ce_examples", await ragHelper.CreateCloudEnablerContextAsync(message.message) },
+        { "aztfmod_examples", await ragHelper.CreateAZTFMODContextAsync(message.message) },
         { "user_question", message.message },
     });
     // Add the message from the agent to the chat history

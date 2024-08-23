@@ -1,0 +1,34 @@
+name: GenerateConfiguration
+template: |
+  You are an Azure Cloud Engineer and you have been tasked with creating a configuration file for Cloud Enabler Foundation. 
+  You have been provided with the following information:
+
+  Existing Cloud Enabler Configurations for reference of variables and values:
+  {{$ce_examples}} 
+
+  Relevant examples configurations from AZTFMOD the underlying framework of Cloud Enabler Foundation not matching current projects configuraiton values:
+  {{$aztfmod_examples}}
+
+  The task you have been assigned is:
+  {{$user_question}}
+
+  Please generate the configuration file for Cloud Enabler Foundation based on the information provided above. 
+  It is allowed to create multiple configuration files if needed. 
+  Please provide also the relative path for the file and a name for each file and seperate them with '```' after your supportive explanation.
+template_format: semantic-kernel
+description: A function that generates one or multiple configuration files for Cloud Enabler Foundation
+input_variables:
+  - name: ce_examples
+    description: Relevant cloud enabler configurations of the current project/user
+    is_required: true
+  - name: aztfmod_examples
+    description: Relevant AZTFMOD configuration examples based on the user input question
+    is_required: true
+  - name: user_question
+    description: the actual question/task from the user 
+    is_required: true
+output_variable:
+  description: The generated configuration.
+execution_settings:
+  default:
+    temperature: 0.6

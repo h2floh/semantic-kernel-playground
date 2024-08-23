@@ -3,14 +3,21 @@
     "build": {
         "dockerfile": "Dockerfile"
     },
-    "extensions": [
-        "ms-dotnettools.csharp",
-        "ms-vscode.vscode-node-azure-pack",
-        "ms-vscode-remote.remote-containers",
-        "github.vscode-github-actions",
-        "GitHub.copilot",
-        "bierner.github-markdown-preview",
-        "eamodio.gitlens"
-    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.vscode-node-azure-pack",
+                "ms-vscode-remote.remote-containers",
+                "github.vscode-github-actions",
+                "GitHub.copilot",
+                "bierner.github-markdown-preview",
+                "eamodio.gitlens",
+                "ms-dotnettools.csdevkit",
+                "ms-dotnettools.vscode-dotnet-runtime",
+                "ms-azuretools.vscode-docker",
+                "humao.rest-client"
+            ]
+        }
+    },
     "postCreateCommand": "dotnet restore"
 }

@@ -20,13 +20,19 @@ internal static class EmbeddedResource
 
     internal static string Read(string fileName)
     {
+        
         // Get the current assembly. Note: this class is in the same assembly where the embedded resources are stored.
         Assembly assembly =
             typeof(EmbeddedResource).GetTypeInfo().Assembly ??
             throw new ConfigurationNotFoundException($"[{s_namespace}] {fileName} assembly not found");
 
+        string[] names = assembly.GetManifestResourceNames();
+        foreach (var name in names)
+        {
+            Console.WriteLine(name);
+        }
         // Resources are mapped like types, using the namespace and appending "." (dot) and the file name
-        var resourceName = $"{s_namespace}." + fileName;
+        var resourceName = $"{assembly.GetName().Name}.{s_namespace}." + fileName;
         using Stream resource =
             assembly.GetManifestResourceStream(resourceName) ??
             throw new ConfigurationNotFoundException($"{resourceName} resource not found");

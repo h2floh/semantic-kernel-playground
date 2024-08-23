@@ -47,24 +47,6 @@ semanticBuilder.Services.AddLogging(services => services.AddConsole().SetMinimum
 Kernel kernel = semanticBuilder.Build();
 var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
 
-// Prompt
-// var prompt = @"You are an Azure Cloud Engineer and you have been tasked with creating a configuration file for Cloud Enabler Foundation. 
-//   You have been provided with the following information:
-
-//   Existing Cloud Enabler Configuration:
-//   {{$ce_configuration}}
-
-//   Examples configurations for AZTFMOD the underlying framework of Cloud Enabler Foundation:
-//   {{$aztfmod_configuration}} 
-
-//   The task you have been assigned is:
-//   {{$user_question}}
-
-//   Please generate the configuration file for Cloud Enabler Foundation based on the information provided above. 
-//   It is allowed to create multiple configuration files if needed. 
-//   Please provide also a name for each file and seperate them with '---' after your supporive explanation.";
-
-
 // Add Azure Chat Extensions PREVIEW
 // var azureSearchExtensionConfigurationCE = new AzureSearchChatExtensionConfiguration
 // {
@@ -98,7 +80,7 @@ OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
 #pragma warning restore SKEXP0010
 
 // var function = kernel.CreateFunctionFromPrompt(prompt, executionSettings: openAIPromptExecutionSettings);
-var generateCEConfigYaml = EmbeddedResource.Read("ce_config.yaml");
+var generateCEConfigYaml = EmbeddedResource.Read("ceconfig.yaml");
 var function = kernel.CreateFunctionFromPromptYaml(generateCEConfigYaml);
 
 // Create a history store the conversation

@@ -1,0 +1,5 @@
+## create resources
+az deployment sub create --verbose --template-file ./main.bicep --location swedencentral
+
+## Delete resources
+az group delete --resource-group rg-semantickernelplayground

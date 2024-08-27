@@ -4,6 +4,9 @@ param location string = 'swedencentral'
 param uniqueStringSalt string = 'semantickernelplayground'
 param storageAccountName string = 'fwagner2258644035'
 param storageAccountResourceGroup string = 'rg-AzureAI'
+param keyVaultName string = 'kv-florianw956471178930'
+param keyVaultResourceGroup string = 'rg-AzureAI'
+param restore bool = false
 
 resource rgskp 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: 'rg-semantickernelplayground'
@@ -14,11 +17,15 @@ resource rgstorage 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   name: storageAccountResourceGroup
 }
 
+resource rgkv 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+  name: keyVaultResourceGroup
+}
+
 module azureai 'br/public:avm/res/cognitive-services/account:0.7.0' = {
   name: '${uniqueString(deployment().name, location)}-azureai-account'
   scope: rgskp
   params: {
-    // restore: true
+    restore: restore
     // Required parameters
     kind: 'AIServices'
     name: 'skp-${uniqueString(uniqueStringSalt)}'
@@ -75,6 +82,27 @@ module resourceRoleAssignment 'br/public:avm/ptn/authorization/resource-role-ass
     description: 'Assign Storage Blob Data Reader role to the managed identity on the storage account.'
     principalType: 'ServicePrincipal'
     roleName: 'Storage Blob Data Reader'
+  }
+}
+
+resource aoai 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' existing = {
+  name: 'skp-${uniqueString(uniqueStringSalt)}'
+  scope: rgskp
+}
+
+// Switch later to a dedicated keyvault and give a user assigned managed identity access to it
+module aoaiKey 'br/public:avm/res/key-vault/vault:0.7.1' = {
+  name: '${uniqueString(deployment().name, location)}-azureai-key'
+  scope: rgkv
+  params: {
+    name: keyVaultName
+    location: 'swedencentral'
+    secrets: [
+      {
+        name: 'openaikey'
+        value: aoai.listKeys().key1
+      }
+    ]
   }
 }
 

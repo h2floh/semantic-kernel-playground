@@ -67,7 +67,7 @@ jobs:
           # Create an index for the configuration data
           curl --request POST \
             --verbose \
-            --url 'https://skp-zf3jjtuszy6au.search.windows.net/indexes?api-version=2024-07-01' \
+            --url 'https://${{ env.AZURE_SEARCH_NAME }}.search.windows.net/indexes?api-version=2024-07-01' \
             --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
             --header 'content-type: application/json' \
             --header 'user-agent: vscode-restclient' \
@@ -76,7 +76,7 @@ jobs:
           # Create an index for the example data
           curl --request POST \
             --verbose \
-            --url 'https://skp-zf3jjtuszy6au.search.windows.net/indexes?api-version=2024-07-01' \
+            --url 'https://${{ env.AZURE_SEARCH_NAME }}.search.windows.net/indexes?api-version=2024-07-01' \
             --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
             --header 'content-type: application/json' \
             --header 'user-agent: vscode-restclient' \
@@ -87,7 +87,7 @@ jobs:
           # Create an indexer for the configuration data, will directly run once
           curl --request POST \
             --verbose \
-            --url 'https://skp-zf3jjtuszy6au.search.windows.net/indexers?api-version=2024-07-01' \
+            --url 'https://${{ env.AZURE_SEARCH_NAME }}.search.windows.net/indexers?api-version=2024-07-01' \
             --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
             --header 'content-type: application/json' \
             --header 'user-agent: vscode-restclient' \
@@ -95,7 +95,7 @@ jobs:
           
           # Create an indexer for the example data, will directly run once
           curl --request POST \
-            --url 'https://skp-zf3jjtuszy6au.search.windows.net/indexers?api-version=2024-07-01' \
+            --url 'https://${{ env.AZURE_SEARCH_NAME }}.search.windows.net/indexers?api-version=2024-07-01' \
             --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
             --header 'content-type: application/json' \
             --header 'user-agent: vscode-restclient' \

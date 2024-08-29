@@ -31,8 +31,8 @@ jobs:
             --verbose \
             --template-file iac/main.bicep \
             --location swedencentral \
-            --parameters restore=true
-          echo "AZURE_SEARCH_NAME=$(az deployment sub show --name 'skp-$DEPLOY_TIME' --query properties.outputs.azureAiAccountName.value)" >> $GITHUB_OUTPUT
+            --parameters restore=false
+          echo "AZURE_SEARCH_NAME=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value)" >> $GITHUB_OUTPUT
           
 
   index-data:

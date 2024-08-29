@@ -7,29 +7,29 @@ permissions:
   contents: read
 
 jobs:
-  deploy-infrastructure:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 'Az CLI login'
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+#   deploy-infrastructure:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: 'Az CLI login'
+#         uses: azure/login@v1
+#         with:
+#           client-id: ${{ secrets.AZURE_CLIENT_ID }}
+#           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+#           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Checkout code
-        uses: actions/checkout@v3
+#       - name: Checkout code
+#         uses: actions/checkout@v3
 
-      - name: 'Deploy environment'
-        run: |
-          az deployment sub create \
-            --verbose \
-            --template-file iac/main.bicep \
-            --location swedencentral \
-            --parameters restore=true
+#       - name: 'Deploy environment'
+#         run: |
+#           az deployment sub create \
+#             --verbose \
+#             --template-file iac/main.bicep \
+#             --location swedencentral \
+#             --parameters restore=true
 
   index-data:
-    needs: deploy-infrastructure
+    # needs: deploy-infrastructure
     runs-on: ubuntu-latest
     steps:
       - name: 'Az CLI login'
@@ -39,13 +39,15 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Create Indecies
+      - name: Create DataSource
         run: |
-            curl --request PUT \
+          env
+          curl --request PUT \
+            --verbose \
             --url 'https://skp-zf3jjtuszy6au.search.windows.net/datasources(%27configuration%27)?api-version=2024-07-01' \
-            --header 'authorization: Bearer ${{ env.AZURE_ACCESS_TOKEN }}' \
+            --header "authorization: Bearer $AZURE_ACCESS_TOKEN" \
             --header 'content-type: application/json' \
             --header 'user-agent: github-actions' \
-            --data '{"name" : "configuration","type" : "azureblob","credentials" : { "connectionString" : "ResourceId=/subscriptions/d4114dca-ae03-432c-a4a0-b6398988b3c9/resourceGroups/rg-AzureAI/providers/Microsoft.Storage/storageAccounts/fwagner2258644035;" },"container" : { "name" : "aztfmod", "query" : "Onsite01/configuration" }}' \
+            --data '{"name" : "configuration","type" : "azureblob","credentials" : { "connectionString" : "ResourceId=/subscriptions/d4114dca-ae03-432c-a4a0-b6398988b3c9/resourceGroups/rg-AzureAI/providers/Microsoft.Storage/storageAccounts/fwagner2258644035;" },"container" : { "name" : "aztfmod", "query" : "Onsite01/configuration" }}'
           
     

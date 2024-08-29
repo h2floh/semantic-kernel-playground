@@ -1,0 +1,134 @@
+@endpoint = skp-zf3jjtuszy6au.search.windows.net
+@dataSourceName_Config = configuration
+@dataSourceName_Example = examples
+@storageResourceId = /subscriptions/d4114dca-ae03-432c-a4a0-b6398988b3c9/resourceGroups/rg-AzureAI/providers/Microsoft.Storage/storageAccounts/fwagner2258644035
+### To set token use in same folder
+### echo "AZURE_TOKEN=$(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" > .env
+@token = {{$dotenv %AZURE_TOKEN}}
+
+
+### Create 1. Datasource
+
+PUT https://{{endpoint}}/datasources('{{dataSourceName_Config}}')?api-version=2024-07-01
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name" : "{{dataSourceName_Config}}",
+    "type" : "azureblob",
+    "credentials" : { "connectionString" : "ResourceId={{storageResourceId}};" },
+    "container" : { "name" : "aztfmod", "query" : "Onsite01/configuration" }
+}
+
+### Create 1. Index
+POST https://{{endpoint}}/indexes?api-version=2024-07-01
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name" : "config-index",
+    "fields": [
+        { "name": "content", "type": "Edm.String", "searchable": true, "filterable": false },
+        { "name": "metadata_storage_name", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true  },
+        { "name": "metadata_storage_size", "type": "Edm.Int64", "searchable": false, "filterable": true, "sortable": true  },
+        { "name": "metadata_storage_content_type", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },
+        { "name": "metadata_storage_file_extension", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },
+        { "name": "metadata_storage_path", "key": true, "type": "Edm.String", "searchable": false }
+    ]
+}
+
+### Create 1. Indexer
+POST https://{{endpoint}}/indexers?api-version=2024-07-01
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name" : "config-indexer",
+  "dataSourceName" : "{{dataSourceName_Config}}",
+  "targetIndexName" : "config-index",
+  "parameters": {
+      "batchSize": null,
+      "maxFailedItems": null,
+      "maxFailedItemsPerBatch": null,
+      "configuration": {
+          "indexedFileNameExtensions" : ".tfvars",
+          "excludedFileNameExtensions" : ".png,.jpeg",
+          "dataToExtract": "contentAndMetadata",
+          "parsingMode": "default"
+      }
+  },
+  "schedule" : { },
+  "fieldMappings" : [
+    {
+      "sourceFieldName": "metadata_storage_path",
+      "targetFieldName": "metadata_storage_path",
+      "mappingFunction": {
+        "name": "base64Encode",
+        "parameters": null
+      }
+    }
+  ]
+}
+
+### Create 2. Datasource
+
+PUT https://{{endpoint}}/datasources('{{dataSourceName_Example}}')?api-version=2024-07-01
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name" : "{{dataSourceName_Example}}",
+    "type" : "azureblob",
+    "credentials" : { "connectionString" : "ResourceId={{storageResourceId}};" },
+    "container" : { "name" : "aztfmod", "query" : "terraform-azurerm-caf/examples" }
+}
+
+### Create 2. Index
+POST https://{{endpoint}}/indexes?api-version=2024-07-01
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name" : "aztfmod-index",
+    "fields": [
+        { "name": "content", "type": "Edm.String", "searchable": true, "filterable": false },
+        { "name": "metadata_storage_name", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true  },
+        { "name": "metadata_storage_size", "type": "Edm.Int64", "searchable": false, "filterable": true, "sortable": true  },
+        { "name": "metadata_storage_content_type", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },
+        { "name": "metadata_storage_file_extension", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },
+        { "name": "metadata_storage_path", "key": true, "type": "Edm.String", "searchable": false }
+    ]
+}
+
+### Create 2. Indexer
+POST https://{{endpoint}}/indexers?api-version=2024-07-01
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name" : "aztfmod-indexer",
+  "dataSourceName" : "{{dataSourceName_Example}}",
+  "targetIndexName" : "aztfmod-index",
+  "parameters": {
+      "batchSize": null,
+      "maxFailedItems": null,
+      "maxFailedItemsPerBatch": null,
+      "configuration": {
+          "indexedFileNameExtensions" : ".tfvars",
+          "excludedFileNameExtensions" : ".png,.jpeg",
+          "dataToExtract": "contentAndMetadata",
+          "parsingMode": "default"
+      }
+  },
+  "schedule" : { },
+  "fieldMappings" : [
+    {
+      "sourceFieldName": "metadata_storage_path",
+      "targetFieldName": "metadata_storage_path",
+      "mappingFunction": {
+        "name": "base64Encode",
+        "parameters": null
+      }
+    }
+  ]
+}

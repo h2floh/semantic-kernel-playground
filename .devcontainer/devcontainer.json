@@ -3,9 +3,16 @@
     "build": {
         "dockerfile": "Dockerfile"
     },
+    "features": {
+		"ghcr.io/devcontainers/features/azure-cli:1": {},
+		"ghcr.io/rchaganti/vsc-devcontainer-features/azurebicep:1": {},
+		"ghcr.io/azure/azure-dev/azd:0": {}
+	},
     "customizations": {
         "vscode": {
             "extensions": [
+                "ms-azuretools.vscode-bicep",
+				"streetsidesoftware.code-spell-checker",
                 "ms-vscode.vscode-node-azure-pack",
                 "ms-vscode-remote.remote-containers",
                 "github.vscode-github-actions",

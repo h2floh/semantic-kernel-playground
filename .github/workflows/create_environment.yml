@@ -9,9 +9,11 @@ permissions:
 jobs:
   deploy-infrastructure:
     runs-on: ubuntu-latest
+    outputs:
+        AZURE_SEARCH_NAME: ${{ steps.deploy.outputs.AZURE_SEARCH_NAME }}
     steps:
       - name: 'Az CLI login'
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -21,31 +23,87 @@ jobs:
         uses: actions/checkout@v3
 
       - name: 'Deploy environment'
+        id: deploy
         run: |
-          az deployment sub create && \
-            --verbose && \
-            --template-file iac/main.bicep && \
-            --location swedencentral && \
-            --parameters restore=true
+          DEPLOY_TIME=$(date +'%Y%m%d%H%M%S')
+          az deployment sub create \
+            --name "skp-$DEPLOY_TIME" \
+            --verbose \
+            --template-file iac/main.bicep \
+            --location swedencentral \
+            --parameters restore=false
+          echo "AZURE_SEARCH_NAME=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)" >> $GITHUB_OUTPUT
+          
 
   index-data:
     needs: deploy-infrastructure
     runs-on: ubuntu-latest
+    env:
+        AZURE_SEARCH_NAME: ${{ needs.deploy-infrastructure.outputs.AZURE_SEARCH_NAME }}
+        AZURE_STORAGE_RESOURCE_ID: ${{ secrets.AZURE_STORAGE_RESOURCE_ID }}
     steps:
       - name: 'Az CLI login'
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Create Indecies
+      - name: Create DataSources
         run: |
-            curl --request PUT \
-            --url 'https://skp-zf3jjtuszy6au.search.windows.net/datasources(%27configuration%27)?api-version=2024-07-01' \
-            --header 'authorization: Bearer ${{ env.AZURE_ACCESS_TOKEN }}' \
+          # Create a datasource for the configuration data
+          curl --request PUT \
+            --verbose \
+            --url 'https://${{ env.AZURE_SEARCH_NAME }}.search.windows.net/datasources(%27configuration%27)?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
             --header 'content-type: application/json' \
             --header 'user-agent: github-actions' \
-            --data '{"name" : "configuration","type" : "azureblob","credentials" : { "connectionString" : "ResourceId=/subscriptions/d4114dca-ae03-432c-a4a0-b6398988b3c9/resourceGroups/rg-AzureAI/providers/Microsoft.Storage/storageAccounts/fwagner2258644035;" },"container" : { "name" : "aztfmod", "query" : "Onsite01/configuration" }}' \
+            --data '{"name" : "configuration","type" : "azureblob","credentials" : { "connectionString" : "ResourceId=${{ env.AZURE_STORAGE_RESOURCE_ID }};" },"container" : { "name" : "aztfmod", "query" : "Onsite01/configuration" }}'
+
+          # Create a datasource for the example data
+          curl --request PUT \
+            --verbose \
+            --url 'https://${{ env.AZURE_SEARCH_NAME }}.search.windows.net/datasources(%27examples%27)?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
+            --header 'content-type: application/json' \
+            --header 'user-agent: vscode-restclient' \
+            --data '{"name" : "examples","type" : "azureblob","credentials" : { "connectionString" : "ResourceId=${{ env.AZURE_STORAGE_RESOURCE_ID }};" },"container" : { "name" : "aztfmod", "query" : "terraform-azurerm-caf/examples" }}'
+
+      - name: Create Indices
+        run: |
+          # Create an index for the configuration data
+          curl --request POST \
+            --verbose \
+            --url 'https://${{ env.AZURE_SEARCH_NAME }}.search.windows.net/indexes?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
+            --header 'content-type: application/json' \
+            --header 'user-agent: vscode-restclient' \
+            --data '{"name" : "config-index","fields": [{ "name": "content", "type": "Edm.String", "searchable": true, "filterable": false },{ "name": "metadata_storage_name", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true  },{ "name": "metadata_storage_size", "type": "Edm.Int64", "searchable": false, "filterable": true, "sortable": true  },{ "name": "metadata_storage_content_type", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },{ "name": "metadata_storage_file_extension", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },{ "name": "metadata_storage_path", "key": true, "type": "Edm.String", "searchable": false }]}'
+
+          # Create an index for the example data
+          curl --request POST \
+            --verbose \
+            --url 'https://${{ env.AZURE_SEARCH_NAME }}.search.windows.net/indexes?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
+            --header 'content-type: application/json' \
+            --header 'user-agent: vscode-restclient' \
+            --data '{"name" : "aztfmod-index","fields": [{ "name": "content", "type": "Edm.String", "searchable": true, "filterable": false },{ "name": "metadata_storage_name", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true  },{ "name": "metadata_storage_size", "type": "Edm.Int64", "searchable": false, "filterable": true, "sortable": true  },{ "name": "metadata_storage_content_type", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },{ "name": "metadata_storage_file_extension", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },{ "name": "metadata_storage_path", "key": true, "type": "Edm.String", "searchable": false }]}'
+
+      - name: Create Indexers
+        run: |
+          # Create an indexer for the configuration data, will directly run once
+          curl --request POST \
+            --verbose \
+            --url 'https://${{ env.AZURE_SEARCH_NAME }}.search.windows.net/indexers?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
+            --header 'content-type: application/json' \
+            --header 'user-agent: vscode-restclient' \
+            --data '{"name" : "config-indexer","dataSourceName" : "configuration","targetIndexName" : "config-index","parameters": {"batchSize": null,"maxFailedItems": null,"maxFailedItemsPerBatch": null,"configuration": {"indexedFileNameExtensions" : ".tfvars","excludedFileNameExtensions" : ".png,.jpeg","dataToExtract": "contentAndMetadata","parsingMode": "default"}},"schedule" : { },"fieldMappings" : [{"sourceFieldName": "metadata_storage_path","targetFieldName": "metadata_storage_path","mappingFunction": {"name": "base64Encode","parameters": null}}]}'
           
-    
+          # Create an indexer for the example data, will directly run once
+          curl --request POST \
+            --url 'https://${{ env.AZURE_SEARCH_NAME }}.search.windows.net/indexers?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
+            --header 'content-type: application/json' \
+            --header 'user-agent: vscode-restclient' \
+            --data '{"name" : "aztfmod-indexer","dataSourceName" : "examples","targetIndexName" : "aztfmod-index","parameters": {"batchSize": null,"maxFailedItems": null,"maxFailedItemsPerBatch": null,"configuration": {"indexedFileNameExtensions" : ".tfvars","excludedFileNameExtensions" : ".png,.jpeg","dataToExtract": "contentAndMetadata","parsingMode": "default"}},"schedule" : { },"fieldMappings" : [{"sourceFieldName": "metadata_storage_path","targetFieldName": "metadata_storage_path","mappingFunction": {"name": "base64Encode","parameters": null}}]}'

@@ -123,5 +123,5 @@ module resourceRoleAssignment 'br/public:avm/ptn/authorization/resource-role-ass
   }
 }
 
-output azureAiAccountName string = azureai.name
-output searchServiceName string = searchService.name
+output azureAiAccountName string = azureai.outputs.name
+output searchServiceName string = searchService.outputs.name

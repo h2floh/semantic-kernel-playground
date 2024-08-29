@@ -22,10 +22,10 @@ jobs:
 
       - name: 'Deploy environment'
         run: |
-          az deployment sub create && \
-            --verbose && \
-            --template-file iac/main.bicep && \
-            --location swedencentral && \
+          az deployment sub create \
+            --verbose \
+            --template-file iac/main.bicep \
+            --location swedencentral \
             --parameters restore=true
 
   index-data:

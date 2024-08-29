@@ -32,7 +32,7 @@ jobs:
             --template-file iac/main.bicep \
             --location swedencentral \
             --parameters restore=false
-          echo "AZURE_SEARCH_NAME=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value)" >> $GITHUB_OUTPUT
+          echo "AZURE_SEARCH_NAME=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)" >> $GITHUB_OUTPUT
           
 
   index-data:
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
         AZURE_SEARCH_NAME: ${{ needs.deploy-infrastructure.outputs.AZURE_SEARCH_NAME }}
-        AZURE_STORAGE_RESOURCE_ID: '/subscriptions/d4114dca-ae03-432c-a4a0-b6398988b3c9/resourceGroups/rg-AzureAI/providers/Microsoft.Storage/storageAccounts/fwagner2258644035'
+        AZURE_STORAGE_RESOURCE_ID: ${{ secrets.AZURE_STORAGE_RESOURCE_ID }}
     steps:
       - name: 'Az CLI login'
         uses: azure/login@v2

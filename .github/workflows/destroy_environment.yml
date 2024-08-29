@@ -1,4 +1,4 @@
-name: Deploy and Prepare Demo Environment
+name: Destroy LLM/RAG Environment
 on: 
   workflow_dispatch:
 

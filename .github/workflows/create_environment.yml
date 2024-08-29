@@ -1,6 +1,14 @@
-name: Deploy and Prepare Demo Environment
+name: Deploy and Prepare LLM/RAG Environment
 on: 
   workflow_dispatch:
+    inputs:
+      restore:
+        description: 'Restore Azure OpenAI Account'
+        required: true
+        type: choice
+        options:
+        - true
+        - false
 
 permissions:
   id-token: write
@@ -31,7 +39,7 @@ jobs:
             --verbose \
             --template-file iac/main.bicep \
             --location swedencentral \
-            --parameters restore=false
+            --parameters restore=${{ github.event.inputs.restore }}
           echo "AZURE_SEARCH_NAME=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)" >> $GITHUB_OUTPUT
           
 

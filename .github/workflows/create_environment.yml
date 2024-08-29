@@ -41,11 +41,10 @@ jobs:
 
       - name: Create DataSource
         run: |
-          env
           curl --request PUT \
             --verbose \
             --url 'https://skp-zf3jjtuszy6au.search.windows.net/datasources(%27configuration%27)?api-version=2024-07-01' \
-            --header "authorization: Bearer $AZURE_ACCESS_TOKEN" \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
             --header 'content-type: application/json' \
             --header 'user-agent: github-actions' \
             --data '{"name" : "configuration","type" : "azureblob","credentials" : { "connectionString" : "ResourceId=/subscriptions/d4114dca-ae03-432c-a4a0-b6398988b3c9/resourceGroups/rg-AzureAI/providers/Microsoft.Storage/storageAccounts/fwagner2258644035;" },"container" : { "name" : "aztfmod", "query" : "Onsite01/configuration" }}'

@@ -1,6 +1,6 @@
 using Azure;
+using Azure.Identity;
 using Azure.Search.Documents;
-using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Models;
 using AzureAISearchIndices;
 
@@ -9,11 +9,10 @@ namespace RAGHelpers {
     public class RAGHelpers {
         private SearchClient? searchClientCE;
         private SearchClient? searchClientAZTFMOD;
-        public RAGHelpers(WebApplication app) {
+        public RAGHelpers(WebApplication app, DefaultAzureCredential credential) {
             // Prepare Azure Search
             var indexCE =  app.Configuration["AZURE_AI_SEARCH_INDEX_CE"]!;
             var indexAZTFMOD =  app.Configuration["AZURE_AI_SEARCH_INDEX_AZTFMOD"]!;
-            AzureKeyCredential credential = new AzureKeyCredential(app.Configuration["AZURE-AI-SEARCH-API-KEY"]!);
             this.searchClientCE = new SearchClient(new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!), indexCE, credential);
             this.searchClientAZTFMOD = new SearchClient(new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!), indexAZTFMOD, credential);
         }

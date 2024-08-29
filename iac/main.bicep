@@ -4,8 +4,7 @@ param location string = 'swedencentral'
 param uniqueStringSalt string = 'semantickernelplayground'
 param storageAccountName string = 'fwagner2258644035'
 param storageAccountResourceGroup string = 'rg-AzureAI'
-param keyVaultName string = 'kv-florianw956471178930'
-param keyVaultResourceGroup string = 'rg-AzureAI'
+param searchLocation string = 'canadacentral' // semantic search not yet available in swedencentral as of 2024-08-26
 param restore bool = false
 
 resource rgskp 'Microsoft.Resources/resourceGroups@2022-09-01' = {
@@ -17,8 +16,25 @@ resource rgstorage 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   name: storageAccountResourceGroup
 }
 
-resource rgkv 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  name: keyVaultResourceGroup
+module userAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.3.0' = {
+  name: '${uniqueString(deployment().name, location)}-managed-identity'
+  scope: rgskp
+  params: {
+    // Required parameters
+    name: 'skp-${uniqueString(uniqueStringSalt)}'
+    // Non-required parameters
+    federatedIdentityCredentials: [
+      {
+        audiences: [
+          'api://AzureADTokenExchange'
+        ]
+        issuer: 'https://token.actions.githubusercontent.com'
+        name: 'GitHubActions'
+        subject: 'repo:h2floh/semantic-kernel-playground:ref:refs/heads/main'
+      }
+    ]
+    location: location
+  }
 }
 
 module azureai 'br/public:avm/res/cognitive-services/account:0.7.0' = {
@@ -28,6 +44,8 @@ module azureai 'br/public:avm/res/cognitive-services/account:0.7.0' = {
     restore: restore
     // Required parameters
     kind: 'AIServices'
+    customSubDomainName: 'skp-${uniqueString(uniqueStringSalt)}'
+    publicNetworkAccess: 'Enabled'
     name: 'skp-${uniqueString(uniqueStringSalt)}'
     deployments: [
       {
@@ -44,6 +62,16 @@ module azureai 'br/public:avm/res/cognitive-services/account:0.7.0' = {
       }
     ]
     location: location
+    roleAssignments: [
+      {
+        principalId: userAssignedIdentity.outputs.principalId
+        roleDefinitionIdOrName: 'Cognitive Services OpenAI User'
+      }
+      {
+        principalId: 'e7359a6e-64fc-4f74-8be2-6c3778a53e1a'
+        roleDefinitionIdOrName: 'Cognitive Services OpenAI User'
+      }
+    ]
   }
 }
 
@@ -54,7 +82,7 @@ module searchService 'br/public:avm/res/search/search-service:0.6.0' = {
     // Required parameters
     name: 'skp-${uniqueString(uniqueStringSalt)}'
     // Non-required parameters
-    location: 'canadacentral' // not yes available in swedencentral as of 2024-08-26
+    location: searchLocation
     partitionCount: 1
     replicaCount: 1
     semanticSearch: 'free'
@@ -62,6 +90,16 @@ module searchService 'br/public:avm/res/search/search-service:0.6.0' = {
     managedIdentities: {
       systemAssigned: true
     }
+    roleAssignments: [
+      {
+        principalId: userAssignedIdentity.outputs.principalId
+        roleDefinitionIdOrName: 'Search Index Data Reader'
+      }
+      {
+        principalId: 'e7359a6e-64fc-4f74-8be2-6c3778a53e1a'
+        roleDefinitionIdOrName: 'Search Index Data Reader'
+      }
+    ]
   }
 }
 
@@ -82,27 +120,6 @@ module resourceRoleAssignment 'br/public:avm/ptn/authorization/resource-role-ass
     description: 'Assign Storage Blob Data Reader role to the managed identity on the storage account.'
     principalType: 'ServicePrincipal'
     roleName: 'Storage Blob Data Reader'
-  }
-}
-
-resource aoai 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' existing = {
-  name: 'skp-${uniqueString(uniqueStringSalt)}'
-  scope: rgskp
-}
-
-// Switch later to a dedicated keyvault and give a user assigned managed identity access to it
-module aoaiKey 'br/public:avm/res/key-vault/vault:0.7.1' = {
-  name: '${uniqueString(deployment().name, location)}-azureai-key'
-  scope: rgkv
-  params: {
-    name: keyVaultName
-    location: 'swedencentral'
-    secrets: [
-      {
-        name: 'openaikey'
-        value: aoai.listKeys().key1
-      }
-    ]
   }
 }
 

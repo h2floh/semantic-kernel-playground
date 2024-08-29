@@ -14,10 +14,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add Azure Key Vault to the configuration
-var keyVaultName = builder.Configuration["KeyVaultName"];
-var keyVaultUri = new Uri($"https://{keyVaultName}.vault.azure.net/");
-
-builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+// var keyVaultName = builder.Configuration["AZURE_KEYVAULT_NAME"];
+// var keyVaultUri = new Uri($"https://{keyVaultName}.vault.azure.net/");
+var azureCredential = new DefaultAzureCredential();
+// builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
 
 var app = builder.Build();
 
@@ -32,7 +32,11 @@ app.UseHttpsRedirection();
 
 // Init semantic Kernel
 // Create a kernel with Azure OpenAI chat completion
-var semanticBuilder = Kernel.CreateBuilder().AddAzureOpenAIChatCompletion(app.Configuration["openAiDeployment"]!, app.Configuration["openAiEndpoint"]!, app.Configuration["openaikey"]!);
+var semanticBuilder = Kernel.
+                        CreateBuilder().
+                        AddAzureOpenAIChatCompletion(app.Configuration["AZURE_OPENAI_DEPLOYMENT"]!,
+                                                     app.Configuration["AZURE_OPENAI_ENDPOINT"]!,
+                                                     azureCredential);
 
 // Add enterprise components
 semanticBuilder.Services.AddLogging(services => services.AddConsole().SetMinimumLevel(LogLevel.Trace));
@@ -76,7 +80,7 @@ var function = kernel.CreateFunctionFromPromptYaml(generateCEConfigYaml);
 
 // Create a history store the conversation
 var history = new ChatHistory();
-var ragHelper = new RAGHelpers.RAGHelpers(app);
+var ragHelper = new RAGHelpers.RAGHelpers(app, azureCredential);
 
 app.MapPost("/message", async (Message message) =>
 {

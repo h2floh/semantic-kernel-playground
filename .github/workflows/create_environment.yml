@@ -39,8 +39,9 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Create DataSource
+      - name: Create DataSources
         run: |
+          # Create a datasource for the configuration data
           curl --request PUT \
             --verbose \
             --url 'https://skp-zf3jjtuszy6au.search.windows.net/datasources(%27configuration%27)?api-version=2024-07-01' \
@@ -48,5 +49,51 @@ jobs:
             --header 'content-type: application/json' \
             --header 'user-agent: github-actions' \
             --data '{"name" : "configuration","type" : "azureblob","credentials" : { "connectionString" : "ResourceId=/subscriptions/d4114dca-ae03-432c-a4a0-b6398988b3c9/resourceGroups/rg-AzureAI/providers/Microsoft.Storage/storageAccounts/fwagner2258644035;" },"container" : { "name" : "aztfmod", "query" : "Onsite01/configuration" }}'
+
+          # Create a datasource for the example data
+          curl --request PUT \
+            --verbose \
+            --url 'https://skp-zf3jjtuszy6au.search.windows.net/datasources(%27examples%27)?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
+            --header 'content-type: application/json' \
+            --header 'user-agent: vscode-restclient' \
+            --data '{"name" : "examples","type" : "azureblob","credentials" : { "connectionString" : "ResourceId=/subscriptions/d4114dca-ae03-432c-a4a0-b6398988b3c9/resourceGroups/rg-AzureAI/providers/Microsoft.Storage/storageAccounts/fwagner2258644035;" },"container" : { "name" : "aztfmod", "query" : "terraform-azurerm-caf/examples" }}'
+
+      - name: Create Indices
+        run: |
+          # Create an index for the configuration data
+          curl --request POST \
+            --verbose \
+            --url 'https://skp-zf3jjtuszy6au.search.windows.net/indexes?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
+            --header 'content-type: application/json' \
+            --header 'user-agent: vscode-restclient' \
+            --data '{"name" : "config-index","fields": [{ "name": "content", "type": "Edm.String", "searchable": true, "filterable": false },{ "name": "metadata_storage_name", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true  },{ "name": "metadata_storage_size", "type": "Edm.Int64", "searchable": false, "filterable": true, "sortable": true  },{ "name": "metadata_storage_content_type", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },{ "name": "metadata_storage_file_extension", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },{ "name": "metadata_storage_path", "key": true, "type": "Edm.String", "searchable": false }]}'
+
+          # Create an index for the example data
+          curl --request POST \
+            --verbose \
+            --url 'https://skp-zf3jjtuszy6au.search.windows.net/indexes?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
+            --header 'content-type: application/json' \
+            --header 'user-agent: vscode-restclient' \
+            --data '{"name" : "aztfmod-index","fields": [{ "name": "content", "type": "Edm.String", "searchable": true, "filterable": false },{ "name": "metadata_storage_name", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true  },{ "name": "metadata_storage_size", "type": "Edm.Int64", "searchable": false, "filterable": true, "sortable": true  },{ "name": "metadata_storage_content_type", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },{ "name": "metadata_storage_file_extension", "type": "Edm.String", "searchable": false, "filterable": true, "sortable": true },{ "name": "metadata_storage_path", "key": true, "type": "Edm.String", "searchable": false }]}'
+
+      - name: Create Indexers
+        run: |
+          # Create an indexer for the configuration data, will directly run once
+          curl --request POST \
+            --verbose \
+            --url 'https://skp-zf3jjtuszy6au.search.windows.net/indexers?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
+            --header 'content-type: application/json' \
+            --header 'user-agent: vscode-restclient' \
+            --data '{"name" : "config-indexer","dataSourceName" : "configuration","targetIndexName" : "config-index","parameters": {"batchSize": null,"maxFailedItems": null,"maxFailedItemsPerBatch": null,"configuration": {"indexedFileNameExtensions" : ".tfvars","excludedFileNameExtensions" : ".png,.jpeg","dataToExtract": "contentAndMetadata","parsingMode": "default"}},"schedule" : { },"fieldMappings" : [{"sourceFieldName": "metadata_storage_path","targetFieldName": "metadata_storage_path","mappingFunction": {"name": "base64Encode","parameters": null}}]}'
           
-    
+          # Create an indexer for the example data, will directly run once
+          curl --request POST \
+            --url 'https://skp-zf3jjtuszy6au.search.windows.net/indexers?api-version=2024-07-01' \
+            --header "authorization: Bearer $(az account get-access-token --scope https://search.azure.com/.default | jq -r .'accessToken')" \
+            --header 'content-type: application/json' \
+            --header 'user-agent: vscode-restclient' \
+            --data '{"name" : "aztfmod-indexer","dataSourceName" : "examples","targetIndexName" : "aztfmod-index","parameters": {"batchSize": null,"maxFailedItems": null,"maxFailedItemsPerBatch": null,"configuration": {"indexedFileNameExtensions" : ".tfvars","excludedFileNameExtensions" : ".png,.jpeg","dataToExtract": "contentAndMetadata","parsingMode": "default"}},"schedule" : { },"fieldMappings" : [{"sourceFieldName": "metadata_storage_path","targetFieldName": "metadata_storage_path","mappingFunction": {"name": "base64Encode","parameters": null}}]}'

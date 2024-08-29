@@ -41,7 +41,7 @@ module azureai 'br/public:avm/res/cognitive-services/account:0.7.0' = {
   name: '${uniqueString(deployment().name, location)}-azureai-account'
   scope: rgskp
   params: {
-    restore: restore
+    //restore: restore
     // Required parameters
     kind: 'AIServices'
     customSubDomainName: 'skp-${uniqueString(uniqueStringSalt)}'

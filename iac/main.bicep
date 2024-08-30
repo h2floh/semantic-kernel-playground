@@ -6,7 +6,7 @@ param storageAccountName string = 'fwagner2258644035'
 param storageAccountResourceGroup string = 'rg-AzureAI'
 param searchLocation string = 'canadacentral' // semantic search not yet available in swedencentral as of 2024-08-26
 param restore bool = false
-
+param developerPrincipalId string = 'e7359a6e-64fc-4f74-8be2-6c3778a53e1a'
 
 resource rgskp 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: 'rg-semantickernelplayground'
@@ -69,7 +69,7 @@ module azureai 'br/public:avm/res/cognitive-services/account:0.7.0' = {
         roleDefinitionIdOrName: 'Cognitive Services OpenAI User'
       }
       {
-        principalId: 'e7359a6e-64fc-4f74-8be2-6c3778a53e1a'
+        principalId: developerPrincipalId
         roleDefinitionIdOrName: 'Cognitive Services OpenAI User'
       }
     ]
@@ -97,7 +97,7 @@ module searchService 'br/public:avm/res/search/search-service:0.6.0' = {
         roleDefinitionIdOrName: 'Search Index Data Reader'
       }
       {
-        principalId: 'e7359a6e-64fc-4f74-8be2-6c3778a53e1a'
+        principalId: developerPrincipalId
         roleDefinitionIdOrName: 'Search Index Data Reader'
       }
     ]
@@ -130,6 +130,8 @@ module phiEndpoint 'phi.bicep' = {
   params: {
     location: location
     uniqueStringSalt: uniqueStringSalt
+    managedIdentityPrincipalId: userAssignedIdentity.outputs.principalId
+    developerPrincipalId: developerPrincipalId
   }
 }
 

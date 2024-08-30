@@ -2,6 +2,8 @@ param uniqueStringSalt string
 param endpointName string = 'skp-${uniqueString(uniqueStringSalt)}'
 param location string = resourceGroup().location
 param modelId string = 'azureml://registries/azureml/models/Phi-3-small-128k-instruct'
+param managedIdentityPrincipalId string
+param developerPrincipalId string
 
 module vault 'br/public:avm/res/key-vault/vault:0.7.1' = {
   name: '${uniqueString(deployment().name, location)}-vaultDeployment'
@@ -12,6 +14,16 @@ module vault 'br/public:avm/res/key-vault/vault:0.7.1' = {
     // Non-required parameters
     enablePurgeProtection: false
     location: location
+    roleAssignments: [
+      {
+        principalId: managedIdentityPrincipalId
+        roleDefinitionIdOrName: 'Key Vault Secrets User'
+      }
+      {
+        principalId: developerPrincipalId
+        roleDefinitionIdOrName: 'Key Vault Secrets User'
+      }
+    ]
   }
 }
 

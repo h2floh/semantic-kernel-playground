@@ -7,6 +7,7 @@ param storageAccountResourceGroup string = 'rg-AzureAI'
 param searchLocation string = 'canadacentral' // semantic search not yet available in swedencentral as of 2024-08-26
 param restore bool = false
 
+
 resource rgskp 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: 'rg-semantickernelplayground'
   location: location
@@ -55,18 +56,6 @@ module azureai 'br/public:avm/res/cognitive-services/account:0.7.0' = {
           version: '0613'
         }
         name: 'gpt-35-turbo-16k'
-        sku: {
-          capacity: 1
-          name: 'Standard'
-        }
-      }
-      {
-        model: {
-          format: 'Microsoft'
-          name: 'Phi-3-small-128k-instruct'
-          version: '3'
-        }
-        name: 'Phi-3-small-128k-instruct'
         sku: {
           capacity: 1
           name: 'Standard'
@@ -132,6 +121,15 @@ module resourceRoleAssignment 'br/public:avm/ptn/authorization/resource-role-ass
     description: 'Assign Storage Blob Data Reader role to the managed identity on the storage account.'
     principalType: 'ServicePrincipal'
     roleName: 'Storage Blob Data Reader'
+  }
+}
+
+module phiEndpoint 'phi.bicep' = {
+  name: '${uniqueString(deployment().name, location)}-phiEndpoint'
+  scope: rgskp
+  params: {
+    location: location
+    uniqueStringSalt: uniqueStringSalt
   }
 }
 

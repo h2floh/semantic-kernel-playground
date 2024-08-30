@@ -60,6 +60,18 @@ module azureai 'br/public:avm/res/cognitive-services/account:0.7.0' = {
           name: 'Standard'
         }
       }
+      {
+        model: {
+          format: 'Microsoft'
+          name: 'Phi-3-small-128k-instruct'
+          version: '3'
+        }
+        name: 'Phi-3-small-128k-instruct'
+        sku: {
+          capacity: 1
+          name: 'Standard'
+        }
+      }
     ]
     location: location
     roleAssignments: [

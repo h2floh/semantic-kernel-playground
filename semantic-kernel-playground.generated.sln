@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SemanticKernelApp", "SemanticKernelApp\SemanticKernelApp.csproj", "{6F336B1A-1349-4BA5-A024-CB7EC007A21F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SemanticKernelApp", "SemanticKernelApp\SemanticKernelApp.csproj", "{F67E2206-36C3-4189-B9F5-AA2B5F1636BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6F336B1A-1349-4BA5-A024-CB7EC007A21F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6F336B1A-1349-4BA5-A024-CB7EC007A21F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6F336B1A-1349-4BA5-A024-CB7EC007A21F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6F336B1A-1349-4BA5-A024-CB7EC007A21F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F67E2206-36C3-4189-B9F5-AA2B5F1636BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F67E2206-36C3-4189-B9F5-AA2B5F1636BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F67E2206-36C3-4189-B9F5-AA2B5F1636BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F67E2206-36C3-4189-B9F5-AA2B5F1636BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

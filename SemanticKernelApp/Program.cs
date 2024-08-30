@@ -14,10 +14,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add Azure Key Vault to the configuration
-// var keyVaultName = builder.Configuration["AZURE_KEYVAULT_NAME"];
-// var keyVaultUri = new Uri($"https://{keyVaultName}.vault.azure.net/");
+var keyVaultUri = new Uri(builder.Configuration["AZURE_KEYVAULT_URI"]!);
 var azureCredential = new DefaultAzureCredential();
-// builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
 
 var app = builder.Build();
 
@@ -38,6 +37,20 @@ var semanticBuilder = Kernel.
                                                      app.Configuration["AZURE_OPENAI_ENDPOINT"]!,
                                                      azureCredential);
 
+if (app.Configuration["MODEL"]!.Equals("PHI")) {
+    var phiKey = app.Configuration[app.Configuration.AsEnumerable()
+                                       .FirstOrDefault(kv => kv.Key.Contains("ServerlessEndpoint-PrimaryKey-" + app.Configuration["AZURE_PHI_PREFIX"]!))
+                                       .Key];
+
+    #pragma warning disable SKEXP0010 
+    semanticBuilder = Kernel.
+                        CreateBuilder().
+                        AddOpenAIChatCompletion(app.Configuration["AZURE_PHI_DEPLOYMENT"]!,
+                                                new Uri(app.Configuration["AZURE_PHI_ENDPOINT"]!),
+                                                phiKey!);
+    #pragma warning restore SKEXP0010 
+}
+
 // Add enterprise components
 semanticBuilder.Services.AddLogging(services => services.AddConsole().SetMinimumLevel(LogLevel.Trace));
 
@@ -45,31 +58,12 @@ semanticBuilder.Services.AddLogging(services => services.AddConsole().SetMinimum
 Kernel kernel = semanticBuilder.Build();
 var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
 
-// Add Azure Chat Extensions PREVIEW
-// var azureSearchExtensionConfigurationCE = new AzureSearchChatExtensionConfiguration
-// {
-//     SearchEndpoint = new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!),
-//     Authentication = new OnYourDataApiKeyAuthenticationOptions(app.Configuration["AZURE-AI-SEARCH-API-KEY"]!),
-//     IndexName = app.Configuration["AZURE_AI_SEARCH_INDEX_CE"]!
-// };
-
-// var azureSearchExtensionConfigurationAZTFMOD = new AzureSearchChatExtensionConfiguration
-// {
-//     SearchEndpoint = new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!),
-//     Authentication = new OnYourDataApiKeyAuthenticationOptions(app.Configuration["AZURE-AI-SEARCH-API-KEY"]!),
-//     IndexName = app.Configuration["AZURE_AI_SEARCH_INDEX_AZTFMOD"]!
-// };
-
-// var chatExtensionsOptions = new AzureChatExtensionsOptions { Extensions = { azureSearchExtensionConfigurationAZTFMOD } };
-
-
-
 // Enable planning
 #pragma warning disable SKEXP0010
 OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new() 
 {
     ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
-    ResponseFormat = ChatCompletionsResponseFormat.JsonObject,
+    ResponseFormat = "json_object",
     //AzureChatExtensionsOptions = chatExtensionsOptions
 };
 #pragma warning restore SKEXP0010

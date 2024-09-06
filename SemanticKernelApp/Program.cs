@@ -4,6 +4,8 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.Text.Json;
 using Resources;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +18,27 @@ builder.Services.AddSwaggerGen();
 var keyVaultUri = new Uri($"https://{builder.Configuration["AZURE_SERVICE_PREFIX"]}.vault.azure.net/");
 var azureCredential = new DefaultAzureCredential();
 builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+// Add authentication services
+// For EntraID see https://learn.microsoft.com/en-us/entra/identity-platform/scenario-protected-web-api-app-configuration?tabs=aspnetcore#using-a-custom-app-id-uri-for-a-web-api
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            ValidateAudience = true,
+            ValidateIssuer = true,
+            ValidateLifetime = true,
+            ValidIssuer = "https://sts.windows.net/ed7e92da-c902-4646-82b7-81cfa187d25e/",
+            ValidAudience = builder.Configuration["AZURE_APPLICATION_URI"],
+        };
+        options.Authority = "https://sts.windows.net/ed7e92da-c902-4646-82b7-81cfa187d25e/";
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -100,7 +121,8 @@ app.MapPost("/message", async (Message message) =>
     return JsonSerializer.Serialize<Message>(new Message(result.ToString() ?? string.Empty));
 })
 .WithName("PostMessage")
-.WithOpenApi();
+.WithOpenApi()
+.RequireAuthorization();
 
 app.Run();
 

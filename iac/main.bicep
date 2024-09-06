@@ -162,7 +162,7 @@ module managedEnvironment 'br/public:avm/res/app/managed-environment:0.7.0' = {
     zoneRedundant: false
     workloadProfiles: [
       {
-        name: 'default'
+        name: 'Consumption'
         workloadProfileType: 'Consumption'
       }
     ]

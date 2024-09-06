@@ -158,6 +158,8 @@ module managedEnvironment 'br/public:avm/res/app/managed-environment:0.7.0' = {
     logAnalyticsWorkspaceResourceId: workspace.outputs.resourceId
     name: 'skp-${uniqueString(uniqueStringSalt)}'
     // Non-required parameters
+    internal: false
+    zoneRedundant: false
     workloadProfiles: [
       {
         name: 'default'

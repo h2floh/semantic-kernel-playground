@@ -174,7 +174,7 @@ module registry 'br/public:avm/res/container-registry/registry:0.4.0' = {
   scope: rgskp
   params: {
     // Required parameters
-    name: 'skp-${uniqueString(uniqueStringSalt)}'
+    name: 'skp${uniqueString(uniqueStringSalt)}'
     // Non-required parameters
     acrSku: 'Basic'
     roleAssignments: [

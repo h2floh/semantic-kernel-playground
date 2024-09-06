@@ -199,6 +199,7 @@ module containerApp 'br/public:avm/res/app/container-app:0.10.0' = {
   scope: rgskp
   params: {
     // Required parameters
+    workloadProfileName: 'Consumption'
     containers: [
       {
         image: '${registry.outputs.loginServer}/semantickernelplayground/api:latest'

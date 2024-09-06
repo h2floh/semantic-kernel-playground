@@ -14,7 +14,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add Azure Key Vault to the configuration
-var keyVaultUri = new Uri(builder.Configuration["AZURE_KEYVAULT_URI"]!);
+var keyVaultUri = new Uri($"https://{builder.Configuration["AZURE_SERVICE_PREFIX"]}.vault.azure.net/");
 var azureCredential = new DefaultAzureCredential();
 builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
 
@@ -34,19 +34,19 @@ app.UseHttpsRedirection();
 var semanticBuilder = Kernel.
                         CreateBuilder().
                         AddAzureOpenAIChatCompletion(app.Configuration["AZURE_OPENAI_DEPLOYMENT"]!,
-                                                     app.Configuration["AZURE_OPENAI_ENDPOINT"]!,
+                                                     $"https://{app.Configuration["AZURE_SERVICE_PREFIX"]}.openai.azure.com/",
                                                      azureCredential);
 
 if (app.Configuration["MODEL"]!.Equals("PHI")) {
     var phiKey = app.Configuration[app.Configuration.AsEnumerable()
-                                       .FirstOrDefault(kv => kv.Key.Contains("ServerlessEndpoint-PrimaryKey-" + app.Configuration["AZURE_PHI_PREFIX"]!))
+                                       .FirstOrDefault(kv => kv.Key.Contains("ServerlessEndpoint-PrimaryKey-" + app.Configuration["AZURE_SERVICE_PREFIX"]!))
                                        .Key];
 
     #pragma warning disable SKEXP0010 
     semanticBuilder = Kernel.
                         CreateBuilder().
                         AddOpenAIChatCompletion(app.Configuration["AZURE_PHI_DEPLOYMENT"]!,
-                                                new Uri(app.Configuration["AZURE_PHI_ENDPOINT"]!),
+                                                new Uri($"https://{app.Configuration["AZURE_SERVICE_PREFIX"]}.swedencentral.models.ai.azure.com/v1/chat/completions"),
                                                 phiKey!);
     #pragma warning restore SKEXP0010 
 }

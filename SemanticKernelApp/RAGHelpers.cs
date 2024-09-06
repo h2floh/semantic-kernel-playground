@@ -13,8 +13,10 @@ namespace RAGHelpers {
             // Prepare Azure Search
             var indexCE =  app.Configuration["AZURE_AI_SEARCH_INDEX_CE"]!;
             var indexAZTFMOD =  app.Configuration["AZURE_AI_SEARCH_INDEX_AZTFMOD"]!;
-            this.searchClientCE = new SearchClient(new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!), indexCE, credential);
-            this.searchClientAZTFMOD = new SearchClient(new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!), indexAZTFMOD, credential);
+            var url = $"https://{app.Configuration["AZURE_SERVICE_PREFIX"]}.search.windows.net";
+            var endpoint = new Uri(url);
+            this.searchClientCE = new SearchClient(endpoint, indexCE, credential);
+            this.searchClientAZTFMOD = new SearchClient(endpoint, indexAZTFMOD, credential);
         }
 
         public async Task<string> CreateCloudEnablerContextAsync(string message) {

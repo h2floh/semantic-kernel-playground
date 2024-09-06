@@ -3,8 +3,22 @@ using Azure.Identity;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using AzureAISearchIndices;
+using System.ComponentModel;
+using Microsoft.SemanticKernel;
 
 namespace RAGHelpers {
+
+    public class RAGPlugin {
+        [KernelFunction, Description("Get a list of current configuration tvfars files")]
+        public static string GetConfiguration(RAGHelpers ragHelper, string message) {
+            return ragHelper.CreateCloudEnablerContextAsync(message).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        [KernelFunction, Description("Get a list of example configuration tvfars files")]
+        public static string GetExampleConfiguration(RAGHelpers ragHelper, string message) {
+            return ragHelper.CreateAZTFMODContextAsync(message).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+    }
 
     public class RAGHelpers {
         private SearchClient? searchClientCE;
@@ -13,8 +27,10 @@ namespace RAGHelpers {
             // Prepare Azure Search
             var indexCE =  app.Configuration["AZURE_AI_SEARCH_INDEX_CE"]!;
             var indexAZTFMOD =  app.Configuration["AZURE_AI_SEARCH_INDEX_AZTFMOD"]!;
-            this.searchClientCE = new SearchClient(new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!), indexCE, credential);
-            this.searchClientAZTFMOD = new SearchClient(new Uri(app.Configuration["AZURE_AI_SEARCH_ENDPOINT"]!), indexAZTFMOD, credential);
+            var url = $"https://{app.Configuration["AZURE_SERVICE_PREFIX"]}.search.windows.net";
+            var endpoint = new Uri(url);
+            this.searchClientCE = new SearchClient(endpoint, indexCE, credential);
+            this.searchClientAZTFMOD = new SearchClient(endpoint, indexAZTFMOD, credential);
         }
 
         public async Task<string> CreateCloudEnablerContextAsync(string message) {

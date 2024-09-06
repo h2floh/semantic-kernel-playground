@@ -1,5 +1,13 @@
+### To set token use in same folder
+### if you get an error that Azure CLI is not allowed to access this application, add Azure CLIs clientid to the Authorized client applications
+### echo "AZURE_TOKEN=$(az account get-access-token --scope api://fed608d3-fecf-4079-bd48-6f1302ea1ac5/api | jq -r .'accessToken')" > .env
+@token = {{$dotenv %AZURE_TOKEN}}
+
+###
+
 POST https://localhost:5001/message HTTP/1.1
-content-type: application/json
+Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
     "message": "Hello"
@@ -8,7 +16,8 @@ content-type: application/json
 ###
 
 POST https://localhost:5001/message HTTP/1.1
-content-type: application/json
+Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
     "message": "Can you create a configuration file for adding a VM to the spoke2 network?"
@@ -17,7 +26,8 @@ content-type: application/json
 ###
 
 POST https://localhost:5001/message HTTP/1.1
-content-type: application/json
+Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
     "message": "Can you create the neccessary configuration for an container app application landingzone?"

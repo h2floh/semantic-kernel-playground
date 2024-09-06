@@ -1,10 +1,11 @@
-using Azure.AI.OpenAI;
 using Azure.Identity;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.Text.Json;
 using Resources;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,11 +15,30 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add Azure Key Vault to the configuration
-var keyVaultUri = new Uri(builder.Configuration["AZURE_KEYVAULT_URI"]!);
+var keyVaultUri = new Uri($"https://{builder.Configuration["AZURE_SERVICE_PREFIX"]}.vault.azure.net/");
 var azureCredential = new DefaultAzureCredential();
 builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+// Add authentication services
+// For EntraID see https://learn.microsoft.com/en-us/entra/identity-platform/scenario-protected-web-api-app-configuration?tabs=aspnetcore#using-a-custom-app-id-uri-for-a-web-api
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            ValidateAudience = true,
+            ValidateIssuer = true,
+            ValidateLifetime = true,
+            ValidIssuer = "https://sts.windows.net/ed7e92da-c902-4646-82b7-81cfa187d25e/",
+            ValidAudience = builder.Configuration["AZURE_APPLICATION_URI"],
+        };
+        options.Authority = "https://sts.windows.net/ed7e92da-c902-4646-82b7-81cfa187d25e/";
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -34,19 +54,19 @@ app.UseHttpsRedirection();
 var semanticBuilder = Kernel.
                         CreateBuilder().
                         AddAzureOpenAIChatCompletion(app.Configuration["AZURE_OPENAI_DEPLOYMENT"]!,
-                                                     app.Configuration["AZURE_OPENAI_ENDPOINT"]!,
+                                                     $"https://{app.Configuration["AZURE_SERVICE_PREFIX"]}.openai.azure.com/",
                                                      azureCredential);
 
 if (app.Configuration["MODEL"]!.Equals("PHI")) {
     var phiKey = app.Configuration[app.Configuration.AsEnumerable()
-                                       .FirstOrDefault(kv => kv.Key.Contains("ServerlessEndpoint-PrimaryKey-" + app.Configuration["AZURE_PHI_PREFIX"]!))
+                                       .FirstOrDefault(kv => kv.Key.Contains("ServerlessEndpoint-PrimaryKey-" + app.Configuration["AZURE_SERVICE_PREFIX"]!))
                                        .Key];
 
     #pragma warning disable SKEXP0010 
     semanticBuilder = Kernel.
                         CreateBuilder().
                         AddOpenAIChatCompletion(app.Configuration["AZURE_PHI_DEPLOYMENT"]!,
-                                                new Uri(app.Configuration["AZURE_PHI_ENDPOINT"]!),
+                                                new Uri($"https://{app.Configuration["AZURE_SERVICE_PREFIX"]}.swedencentral.models.ai.azure.com/v1/chat/completions"),
                                                 phiKey!);
     #pragma warning restore SKEXP0010 
 }
@@ -71,6 +91,7 @@ OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
 // var function = kernel.CreateFunctionFromPrompt(prompt, executionSettings: openAIPromptExecutionSettings);
 var generateCEConfigYaml = EmbeddedResource.Read("ceconfig.yaml");
 var function = kernel.CreateFunctionFromPromptYaml(generateCEConfigYaml);
+kernel.ImportPluginFromType<RAGHelpers.RAGPlugin>();
 
 // Create a history store the conversation
 var history = new ChatHistory();
@@ -91,8 +112,7 @@ app.MapPost("/message", async (Message message) =>
     // Invoke the prompt
     var result = await kernel.InvokeAsync(function, arguments: new()
     {
-        { "ce_examples", await ragHelper.CreateCloudEnablerContextAsync(message.message) },
-        { "aztfmod_examples", await ragHelper.CreateAZTFMODContextAsync(message.message) },
+        { "rag_helper" , ragHelper },
         { "user_question", message.message },
     });
     // Add the message from the agent to the chat history
@@ -101,7 +121,8 @@ app.MapPost("/message", async (Message message) =>
     return JsonSerializer.Serialize<Message>(new Message(result.ToString() ?? string.Empty));
 })
 .WithName("PostMessage")
-.WithOpenApi();
+.WithOpenApi()
+.RequireAuthorization();
 
 app.Run();
 

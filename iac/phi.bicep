@@ -12,7 +12,7 @@ module vault 'br/public:avm/res/key-vault/vault:0.7.1' = {
     name: 'skp-${uniqueString(uniqueStringSalt)}'
     sku: 'standard'
     // Non-required parameters
-    enablePurgeProtection: false
+    enablePurgeProtection: false 
     location: location
     roleAssignments: [
       {

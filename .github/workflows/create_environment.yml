@@ -7,8 +7,8 @@ on:
         required: true
         type: choice
         options:
-        - true
         - false
+        - true
 
 permissions:
   id-token: write
@@ -39,8 +39,9 @@ jobs:
             --verbose \
             --template-file iac/main.bicep \
             --location swedencentral \
-            --parameters restore=${{ github.event.inputs.restore }}
+            --parameters restore=${{ github.event.inputs.restore }} uniqueStringSalt=$DEPLOY_TIME
           echo "AZURE_SEARCH_NAME=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)" >> $GITHUB_OUTPUT
+          echo "Service-Prefix: $(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)"
           
 
   index-data:

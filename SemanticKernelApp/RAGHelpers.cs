@@ -3,8 +3,22 @@ using Azure.Identity;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using AzureAISearchIndices;
+using System.ComponentModel;
+using Microsoft.SemanticKernel;
 
 namespace RAGHelpers {
+
+    public class RAGPlugin {
+        [KernelFunction, Description("Get a list of current configuration tvfars files")]
+        public static string GetConfiguration(RAGHelpers ragHelper, string message) {
+            return ragHelper.CreateCloudEnablerContextAsync(message).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        [KernelFunction, Description("Get a list of example configuration tvfars files")]
+        public static string GetExampleConfiguration(RAGHelpers ragHelper, string message) {
+            return ragHelper.CreateAZTFMODContextAsync(message).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+    }
 
     public class RAGHelpers {
         private SearchClient? searchClientCE;

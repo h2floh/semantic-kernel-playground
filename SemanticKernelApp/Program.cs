@@ -1,4 +1,3 @@
-using Azure.AI.OpenAI;
 using Azure.Identity;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -71,6 +70,7 @@ OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
 // var function = kernel.CreateFunctionFromPrompt(prompt, executionSettings: openAIPromptExecutionSettings);
 var generateCEConfigYaml = EmbeddedResource.Read("ceconfig.yaml");
 var function = kernel.CreateFunctionFromPromptYaml(generateCEConfigYaml);
+kernel.ImportPluginFromType<RAGHelpers.RAGPlugin>();
 
 // Create a history store the conversation
 var history = new ChatHistory();
@@ -91,8 +91,7 @@ app.MapPost("/message", async (Message message) =>
     // Invoke the prompt
     var result = await kernel.InvokeAsync(function, arguments: new()
     {
-        { "ce_examples", await ragHelper.CreateCloudEnablerContextAsync(message.message) },
-        { "aztfmod_examples", await ragHelper.CreateAZTFMODContextAsync(message.message) },
+        { "rag_helper" , ragHelper },
         { "user_question", message.message },
     });
     // Add the message from the agent to the chat history

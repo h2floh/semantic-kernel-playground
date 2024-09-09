@@ -214,7 +214,7 @@ module containerApp 'br/public:avm/res/app/container-app:0.10.0' = {
     name: 'skp-${uniqueString(uniqueStringSalt)}'
     managedIdentities: {
       userAssignedResourceIds: [
-        userAssignedIdentity.outputs.principalId
+        userAssignedIdentity.outputs.resourceId
       ]
     }
   }

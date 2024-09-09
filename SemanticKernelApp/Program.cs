@@ -19,7 +19,8 @@ var keyVaultUri = new Uri($"https://{builder.Configuration["AZURE_SERVICE_PREFIX
 var azureCredential = new DefaultAzureCredential(
     new DefaultAzureCredentialOptions
     {
-        ManagedIdentityResourceId = new Azure.Core.ResourceIdentifier(builder.Configuration["AZURE_USER_ASSIGNED_IDENTITY_RESID"]!)
+        ManagedIdentityClientId = builder.Configuration["AZURE_USER_ASSIGNED_IDENTITY_CLIENT_ID"],
+        // ManagedIdentityResourceId = new Azure.Core.ResourceIdentifier(builder.Configuration["AZURE_USER_ASSIGNED_IDENTITY_RESID"]!)
     });
 builder.Configuration.AddAzureKeyVault(keyVaultUri, azureCredential);
 // Add authentication services

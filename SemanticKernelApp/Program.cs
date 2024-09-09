@@ -16,8 +16,12 @@ builder.Services.AddSwaggerGen();
 
 // Add Azure Key Vault to the configuration
 var keyVaultUri = new Uri($"https://{builder.Configuration["AZURE_SERVICE_PREFIX"]}.vault.azure.net/");
-var azureCredential = new DefaultAzureCredential();
-builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+var azureCredential = new DefaultAzureCredential(
+    new DefaultAzureCredentialOptions
+    {
+        ManagedIdentityResourceId = new Azure.Core.ResourceIdentifier(builder.Configuration["AZURE_USER_ASSIGNED_IDENTITY_RESID"]!)
+    });
+builder.Configuration.AddAzureKeyVault(keyVaultUri, azureCredential);
 // Add authentication services
 // For EntraID see https://learn.microsoft.com/en-us/entra/identity-platform/scenario-protected-web-api-app-configuration?tabs=aspnetcore#using-a-custom-app-id-uri-for-a-web-api
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

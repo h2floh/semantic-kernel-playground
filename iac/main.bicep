@@ -200,6 +200,7 @@ module containerApp 'br/public:avm/res/app/container-app:0.10.0' = {
   params: {
     // Required parameters
     workloadProfileName: 'Consumption'
+
     containers: [
       {
         image: '${registry.outputs.loginServer}/semantickernelplayground/api:latest'
@@ -208,6 +209,12 @@ module containerApp 'br/public:avm/res/app/container-app:0.10.0' = {
           cpu: '0.25'
           memory: '0.5Gi'
         }
+      }
+    ]
+    registries: [
+      {
+        server: registry.outputs.loginServer
+        identity: userAssignedIdentity.outputs.resourceId
       }
     ]
     environmentResourceId: managedEnvironment.outputs.resourceId

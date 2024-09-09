@@ -36,6 +36,7 @@ jobs:
 
       - name: 'Build and push container'
         run: |
+          az acr login --name ${{ inputs.acr }}
           docker build . -t ${{ inputs.acr }}/semantickernelplayground/api:latest
           docker push ${{ inputs.acr }}/semantickernelplayground/api:latest
         working-directory: ./SemanticKernelApp

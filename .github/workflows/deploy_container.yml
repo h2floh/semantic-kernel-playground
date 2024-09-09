@@ -1,0 +1,41 @@
+name: Build and Deploy API Service
+on: 
+  workflow_call: 
+    inputs: 
+      acr: 
+        description: 'Azure Container Registry login server'
+        required: true
+        type: string
+        default: '.azurecr.io'
+
+  workflow_dispatch:
+    inputs:
+      acr:
+        description: 'Azure Container Registry login server'
+        required: true
+        type: string
+        default: '.azurecr.io'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Az CLI login'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 'Checkout code'
+        uses: actions/checkout@v3
+
+      - name: 'Build and push container'
+        run: |
+          docker build . -t ${{ inputs.acr }}/semantickernelplayground/api:latest
+          docker push ${{ inputs.acr }}/semantickernelplayground/api:latest
+        working-directory: ./SemanticKernelApp

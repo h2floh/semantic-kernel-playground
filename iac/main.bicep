@@ -209,6 +209,12 @@ module containerApp 'br/public:avm/res/app/container-app:0.10.0' = {
           cpu: '0.25'
           memory: '0.5Gi'
         }
+        env: [
+          {
+            name: 'AZURE_SERVICE_PREFIX'
+            value: azureai.outputs.name
+          }
+        ]
       }
     ]
     registries: [

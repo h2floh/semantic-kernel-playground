@@ -205,7 +205,7 @@ module containerApp 'br/public:avm/res/app/container-app:0.10.0' = {
         image: '${registry.outputs.loginServer}/semantickernelplayground/api:latest'
         name: 'ai-agent-api'
         resources: {
-          cpu: '0.5'
+          cpu: '0.25'
           memory: '0.5Gi'
         }
       }

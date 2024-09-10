@@ -4,13 +4,20 @@ param location string = 'swedencentral'
 param servicePrefix string = ''
 param uniqueStringSalt string = ''
 param acrLoginServer string = ''
-param managedEnvironmentResourceId string = ''
-param userAssignedIdentityResourceId string = '' //needed for association to container app
 param userAssignedIdentityClientId string = '' //needed for container apps managed identity login
 
-resource rgskp 'Microsoft.Resources/resourceGroups@2022-09-01' = {
+resource rgskp 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   name: 'rg-semantickernelplayground'
-  location: location
+}
+
+resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+  name: 'skp-${uniqueString(uniqueStringSalt)}'
+  scope: rgskp
+}
+
+resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: 'skp-${uniqueString(uniqueStringSalt)}'
+  scope: rgskp
 }
 
 module containerApp 'br/public:avm/res/app/container-app:0.10.0' = {
@@ -43,14 +50,14 @@ module containerApp 'br/public:avm/res/app/container-app:0.10.0' = {
     registries: [
       {
         server: acrLoginServer
-        identity: userAssignedIdentityResourceId
+        identity: userAssignedIdentity.id
       }
     ]
-    environmentResourceId: managedEnvironmentResourceId
+    environmentResourceId: managedEnvironment.id
     name: 'skp-${uniqueString(uniqueStringSalt)}'
     managedIdentities: {
       userAssignedResourceIds: [
-        userAssignedIdentityResourceId
+        userAssignedIdentity.id
       ]
     }
   }

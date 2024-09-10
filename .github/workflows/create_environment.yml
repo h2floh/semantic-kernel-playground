@@ -21,8 +21,6 @@ jobs:
         UNIQUE_SALT: ${{ steps.deploy.outputs.UNIQUE_SALT }}
         AZURE_SEARCH_NAME: ${{ steps.deploy.outputs.AZURE_SEARCH_NAME }}
         AZURE_CONTAINER_REGISTRY: ${{ steps.deploy.outputs.AZURE_CONTAINER_REGISTRY }}
-        AZURE_CA_ENV_RESID: ${{ steps.deploy.outputs.AZURE_CA_ENV_RESID }}
-        AZURE_UMSI_RESID: ${{ steps.deploy.outputs.AZURE_UMSI_RESID }}
         AZURE_UMSI_CLIENT_ID: ${{ steps.deploy.outputs.AZURE_UMSI_CLIENT_ID }}
     steps:
       - name: 'Az CLI login'
@@ -49,8 +47,6 @@ jobs:
           echo "UNIQUE_SALT=$DEPLOY_TIME" >> $GITHUB_OUTPUT  
           echo "AZURE_SEARCH_NAME=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)" >> $GITHUB_OUTPUT
           echo "AZURE_CONTAINER_REGISTRY=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.acrLoginServer.value --output tsv)" >> $GITHUB_OUTPUT
-          echo "AZURE_CA_ENV_RESID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.managedEnvironmentResourceId.value --output tsv | base64 -w 0)" >> $GITHUB_OUTPUT
-          echo "AZURE_UMSI_RESID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.userAssignedIdentityResourceId.value --output tsv | base64 -w 0)" >> $GITHUB_OUTPUT
           echo "AZURE_UMSI_CLIENT_ID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.userAssignedIdentityClientId.value --output tsv)" >> $GITHUB_OUTPUT
           echo "Service-Prefix: $(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)"
           
@@ -71,8 +67,6 @@ jobs:
         AZURE_SEARCH_NAME: ${{ needs.deploy-infrastructure.outputs.AZURE_SEARCH_NAME }}
         UNIQUE_SALT: ${{ needs.deploy-infrastructure.outputs.UNIQUE_SALT }}
         AZURE_CONTAINER_REGISTRY: ${{ needs.deploy-infrastructure.outputs.AZURE_CONTAINER_REGISTRY }}
-        AZURE_CA_ENV_RESID: ${{ needs.deploy-infrastructure.outputs.AZURE_CA_ENV_RESID }}
-        AZURE_UMSI_RESID: ${{ needs.deploy-infrastructure.outputs.AZURE_UMSI_RESID }}
         AZURE_UMSI_CLIENT_ID: ${{ needs.deploy-infrastructure.outputs.AZURE_UMSI_CLIENT_ID }}
     steps:
       - name: 'Az CLI login'
@@ -88,7 +82,7 @@ jobs:
       - name: Create ContainerApp
         run: |
           az deployment sub create \
-            --name "skp-app-$DEPLOY_TIME" \
+            --name "skp-app-$UNIQUE_SALT" \
             --verbose \
             --template-file iac/containerapp.bicep \
             --location swedencentral \
@@ -96,8 +90,6 @@ jobs:
             servicePrefix=$AZURE_SEARCH_NAME \
             uniqueStringSalt=$UNIQUE_SALT \
             acrLoginServer=$AZURE_CONTAINER_REGISTRY \
-            managedEnvironmentResourceId=$(echo -n $AZURE_CA_ENV_RESID | base64 -d) \
-            userAssignedIdentityResourceId=$(echo -n $AZURE_UMSI_RESID | base64 -d) \
             userAssignedIdentityClientId=$AZURE_UMSI_CLIENT_ID
 
   index-data:

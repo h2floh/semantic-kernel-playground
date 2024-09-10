@@ -60,6 +60,10 @@ jobs:
     uses: ./.github/workflows/deploy_container.yml
     with:
       acr: ${{ needs.deploy-infrastructure.outputs.AZURE_SEARCH_NAME }}
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   deploy-containerapp:
     needs: deploy-api

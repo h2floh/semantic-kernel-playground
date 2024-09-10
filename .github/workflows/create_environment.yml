@@ -39,7 +39,7 @@ jobs:
         id: deploy
         run: |
           DEPLOY_TIME=$(date +'%Y%m%d%H%M%S')
-          echo "SaltString: $DEPLOY_TIME"
+          echo "SaltString: $DEPLOY_TIME"f
           az deployment sub create \
             --name "skp-infra-$DEPLOY_TIME" \
             --verbose \
@@ -58,7 +58,7 @@ jobs:
     needs: deploy-infrastructure
     uses: ./.github/workflows/deploy_container.yml
     with:
-      acr: ${{ needs.deploy-infrastructure.outputs.AZURE_SEARCH_NAME }}
+      acr: ${{ needs.deploy-infrastructure.outputs.AZURE_CONTAINER_REGISTRY }}
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}

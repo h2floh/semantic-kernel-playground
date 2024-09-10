@@ -194,45 +194,12 @@ module registry 'br/public:avm/res/container-registry/registry:0.4.0' = {
   }
 }
 
-module containerApp 'br/public:avm/res/app/container-app:0.10.0' = {
-  name: '${uniqueString(deployment().name, location)}-containerAppDeployment'
-  scope: rgskp
-  params: {
-    // Required parameters
-    workloadProfileName: 'Consumption'
 
-    containers: [
-      {
-        image: '${registry.outputs.loginServer}/semantickernelplayground/api:latest'
-        name: 'ai-agent-api'
-        resources: {
-          cpu: '0.25'
-          memory: '0.5Gi'
-        }
-        env: [
-          {
-            name: 'AZURE_SERVICE_PREFIX'
-            value: azureai.outputs.name
-          }
-        ]
-      }
-    ]
-    registries: [
-      {
-        server: registry.outputs.loginServer
-        identity: userAssignedIdentity.outputs.resourceId
-      }
-    ]
-    environmentResourceId: managedEnvironment.outputs.resourceId
-    name: 'skp-${uniqueString(uniqueStringSalt)}'
-    managedIdentities: {
-      userAssignedResourceIds: [
-        userAssignedIdentity.outputs.resourceId
-      ]
-    }
-  }
-}
 
 
 output azureAiAccountName string = azureai.outputs.name
 output searchServiceName string = searchService.outputs.name
+output acrLoginServer string = registry.outputs.loginServer
+output managedEnvironmentResourceId string = managedEnvironment.outputs.resourceId
+output userAssignedIdentityResourceId string = userAssignedIdentity.outputs.resourceId
+output userAssignedIdentityClientId string = userAssignedIdentity.outputs.clientId

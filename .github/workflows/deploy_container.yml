@@ -7,6 +7,16 @@ on:
         required: true
         type: string
         default: '.azurecr.io'
+    secrets: 
+      AZURE_CLIENT_ID:
+        description: 'Azure Client ID'
+        required: true
+      AZURE_TENANT_ID:
+        description: 'Azure Tenant ID'
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        description: 'Azure Subscription ID'
+        required: true
 
   workflow_dispatch:
     inputs:
@@ -36,6 +46,7 @@ jobs:
 
       - name: 'Build and push container'
         run: |
+          az acr login --name ${{ inputs.acr }}
           docker build . -t ${{ inputs.acr }}/semantickernelplayground/api:latest
           docker push ${{ inputs.acr }}/semantickernelplayground/api:latest
         working-directory: ./SemanticKernelApp

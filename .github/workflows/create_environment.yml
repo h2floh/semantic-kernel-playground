@@ -47,13 +47,12 @@ jobs:
             --location swedencentral \
             --parameters restore=${{ github.event.inputs.restore }} uniqueStringSalt=$DEPLOY_TIME
           echo "UNIQUE_SALT=$DEPLOY_TIME" >> $GITHUB_OUTPUT  
-          echo "AZURE_SEARCH_NAME=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)" >> $GITHUB_OUTPUT
-          echo "AZURE_CONTAINER_REGISTRY=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.acrLoginServer.value --output tsv)" >> $GITHUB_OUTPUT
-          echo "AZURE_CA_ENV_RESID=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.managedEnvironmentResourceId.value --output tsv)" >> $GITHUB_OUTPUT
-          echo "AZURE_UMSI_RESID=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.userAssignedIdentityResourceId.value --output tsv)" >> $GITHUB_OUTPUT
-          echo "AZURE_UMSI_CLIENT_ID=$(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.userAssignedIdentityClientId.value --output tsv)" >> $GITHUB_OUTPUT
-          
-          echo "Service-Prefix: $(az deployment sub show --name "skp-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)"
+          echo "AZURE_SEARCH_NAME=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)" >> $GITHUB_OUTPUT
+          echo "AZURE_CONTAINER_REGISTRY=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.acrLoginServer.value --output tsv)" >> $GITHUB_OUTPUT
+          echo "AZURE_CA_ENV_RESID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.managedEnvironmentResourceId.value --output tsv)" >> $GITHUB_OUTPUT
+          echo "AZURE_UMSI_RESID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.userAssignedIdentityResourceId.value --output tsv)" >> $GITHUB_OUTPUT
+          echo "AZURE_UMSI_CLIENT_ID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.userAssignedIdentityClientId.value --output tsv)" >> $GITHUB_OUTPUT
+          echo "Service-Prefix: $(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)"
           
   deploy-api:
     needs: deploy-infrastructure

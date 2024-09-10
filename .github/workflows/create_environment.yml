@@ -39,7 +39,7 @@ jobs:
         id: deploy
         run: |
           DEPLOY_TIME=$(date +'%Y%m%d%H%M%S')
-          echo "SaltString: $DEPLOY_TIME"f
+          echo "SaltString: $DEPLOY_TIME"
           az deployment sub create \
             --name "skp-infra-$DEPLOY_TIME" \
             --verbose \

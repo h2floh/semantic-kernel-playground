@@ -199,7 +199,7 @@ module registry 'br/public:avm/res/container-registry/registry:0.4.0' = {
 
 output azureAiAccountName string = azureai.outputs.name
 output searchServiceName string = searchService.outputs.name
-output acrLoginServer string = searchService.outputs.name
+output acrLoginServer string = registry.outputs.loginServer
 output managedEnvironmentResourceId string = managedEnvironment.outputs.resourceId
 output userAssignedIdentityResourceId string = userAssignedIdentity.outputs.resourceId
 output userAssignedIdentityClientId string = userAssignedIdentity.outputs.clientId

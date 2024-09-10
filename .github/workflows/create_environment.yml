@@ -49,8 +49,8 @@ jobs:
           echo "UNIQUE_SALT=$DEPLOY_TIME" >> $GITHUB_OUTPUT  
           echo "AZURE_SEARCH_NAME=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)" >> $GITHUB_OUTPUT
           echo "AZURE_CONTAINER_REGISTRY=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.acrLoginServer.value --output tsv)" >> $GITHUB_OUTPUT
-          echo "AZURE_CA_ENV_RESID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.managedEnvironmentResourceId.value --output tsv)" >> $GITHUB_OUTPUT
-          echo "AZURE_UMSI_RESID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.userAssignedIdentityResourceId.value --output tsv)" >> $GITHUB_OUTPUT
+          echo "AZURE_CA_ENV_RESID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.managedEnvironmentResourceId.value --output tsv | base64)" >> $GITHUB_OUTPUT
+          echo "AZURE_UMSI_RESID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.userAssignedIdentityResourceId.value --output tsv | base64)" >> $GITHUB_OUTPUT
           echo "AZURE_UMSI_CLIENT_ID=$(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.userAssignedIdentityClientId.value --output tsv)" >> $GITHUB_OUTPUT
           echo "Service-Prefix: $(az deployment sub show --name "skp-infra-$DEPLOY_TIME" --query properties.outputs.azureAiAccountName.value --output tsv)"
           
@@ -65,7 +65,7 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   deploy-containerapp:
-    needs: deploy-api
+    needs: [deploy-api, deploy-infrastructure]
     runs-on: ubuntu-latest
     env:
         AZURE_SEARCH_NAME: ${{ needs.deploy-infrastructure.outputs.AZURE_SEARCH_NAME }}
@@ -96,8 +96,8 @@ jobs:
             servicePrefix=$AZURE_SEARCH_NAME \
             uniqueStringSalt=$UNIQUE_SALT \
             acrLoginServer=$AZURE_CONTAINER_REGISTRY \
-            managedEnvironmentResourceId=$AZURE_CA_ENV_RESID \
-            userAssignedIdentityResourceId=$AZURE_UMSI_RESID \
+            managedEnvironmentResourceId=$(echo -n $AZURE_CA_ENV_RESID | base64 -d) \
+            userAssignedIdentityResourceId=$(echo -n $AZURE_UMSI_RESID | base64 -d) \
             userAssignedIdentityClientId=$AZURE_UMSI_CLIENT_ID
 
   index-data:

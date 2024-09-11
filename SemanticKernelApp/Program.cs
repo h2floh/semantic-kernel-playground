@@ -101,9 +101,9 @@ kernel.ImportPluginFromType<RAGHelpers.RAGPlugin>();
 var history = new ChatHistory();
 var ragHelper = new RAGHelpers.RAGHelpers(app, azureCredential);
 
-app.MapPost("/message", async (Message message) =>
+app.MapPost("/message", async (Request req) =>
 {
-    Console.WriteLine($"Message received: {message.message}");
+    Console.WriteLine($"Message received: {req.messages.First().content}");
     // Add user input
     // history.AddUserMessage(message.message);
 
@@ -117,12 +117,12 @@ app.MapPost("/message", async (Message message) =>
     var result = await kernel.InvokeAsync(function, arguments: new()
     {
         { "rag_helper" , ragHelper },
-        { "user_question", message.message },
+        { "user_question", req.messages.First().content },
     });
     // Add the message from the agent to the chat history
     // history.AddMessage(result.Role, result.Content ?? string.Empty);
 
-    return JsonSerializer.Serialize<Message>(new Message(result.ToString() ?? string.Empty));
+    return JsonSerializer.Serialize(new Response(new ResponseMessage(content: result.ToString() ?? string.Empty)));
 })
 .WithName("PostMessage")
 .WithOpenApi()
@@ -130,4 +130,9 @@ app.MapPost("/message", async (Message message) =>
 
 app.Run();
 
-record Message(string message);
+// Implementing https://github.com/microsoft/ai-chat-protocol/tree/main/spec#readme
+record RequestMessage(string content, string role = "user");
+record Request(RequestMessage[] messages);
+
+record Response(ResponseMessage message);
+record ResponseMessage(string content, string? function_call = null, string role = "assistant", string? tool_calls = null);

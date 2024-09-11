@@ -11,7 +11,11 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "message": "Hello"
+    "messages": [
+        { 
+            "content": "Hello"
+        }
+    ]
 }
 
 ###
@@ -21,7 +25,11 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "message": "Can you create a configuration file for adding a VM to the spoke2 network?"
+    "messages": [
+        { 
+            "content": "Can you create a configuration file for adding a VM to the spoke2 network?"
+        }
+    ]
 }
 
 ###
@@ -31,5 +39,9 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "message": "Can you create the neccessary configuration for an container app application landingzone?"
+    "messages" : [
+        {
+            "content": "Can you create the neccessary configuration for an container app application landingzone?"
+        }
+    ]
 }

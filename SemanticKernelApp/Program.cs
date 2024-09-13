@@ -22,6 +22,18 @@ var azureCredential = new DefaultAzureCredential(
         ManagedIdentityClientId = builder.Configuration["AZURE_USER_ASSIGNED_IDENTITY_CLIENT_ID"]
     });
 builder.Configuration.AddAzureKeyVault(keyVaultUri, azureCredential);
+// Add Cors
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.AllowAnyOrigin();
+        builder.AllowAnyMethod();
+        builder.AllowAnyHeader();
+    });
+});
+
+
 // Add authentication services
 // For EntraID see https://learn.microsoft.com/en-us/entra/identity-platform/scenario-protected-web-api-app-configuration?tabs=aspnetcore#using-a-custom-app-id-uri-for-a-web-api
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -41,6 +53,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+// Cors settings
+app.UseCors();
+
+// Authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -48,6 +64,7 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// Protocol security
 app.UseHttpsRedirection();
 
 // Init semantic Kernel

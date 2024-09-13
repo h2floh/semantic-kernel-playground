@@ -155,10 +155,9 @@ app.MapPost("/stream", async (HttpContext context, Request req) =>
         { "user_question", req.messages.First().content },
     })) 
     {
-        var bytes = System.Text.Encoding.UTF8.GetBytes(
-            JsonSerializer.Serialize(new ResponseDelta(new ResponseMessage(content: chunk.ToString() ?? string.Empty)))
-        );
-        Console.WriteLine($"Content received: {chunk}");
+        var deltaContent = $"\"delta\": {JsonSerializer.Serialize(new ResponseMessage(content: chunk.ToString() ?? string.Empty))},\n";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(deltaContent);
+        Console.WriteLine($"Content received: {deltaContent}");
         //JsonSerializer.Serialize(new ResponseType(new ResponseMessage(content: chunk.ToString() ?? string.Empty)
         await context.Response.BodyWriter.WriteAsync(bytes);
         await context.Response.BodyWriter.FlushAsync();

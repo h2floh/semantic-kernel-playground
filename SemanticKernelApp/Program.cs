@@ -142,6 +142,28 @@ app.MapPost("/message", async (Request req) =>
 .WithOpenApi()
 .RequireAuthorization();
 
+app.MapPost("/stream", async (HttpContext context, Request req) =>
+{
+    Console.WriteLine($"Message received: {req.messages.First().content}");
+    context.Response.ContentType = "text/event-stream";
+    // Invoke the prompt
+    await foreach (var chunk in kernel.InvokeStreamingAsync(function, arguments: new()
+    {
+        { "rag_helper" , ragHelper },
+        { "user_question", req.messages.First().content },
+    })) 
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(chunk.ToString());
+        Console.WriteLine($"Content received: {chunk}");
+        //JsonSerializer.Serialize(new ResponseType(new ResponseMessage(content: chunk.ToString() ?? string.Empty)
+        await context.Response.BodyWriter.WriteAsync(bytes);
+        await context.Response.BodyWriter.FlushAsync();
+    }
+})
+.WithName("SteamMessage")
+.WithOpenApi()
+.RequireAuthorization();
+
 app.Run();
 
 // Implementing https://github.com/microsoft/ai-chat-protocol/tree/main/spec#readme

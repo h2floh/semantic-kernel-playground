@@ -45,3 +45,17 @@ Authorization: Bearer {{token}}
         }
     ]
 }
+
+###
+
+POST https://{{endpoint}}/stream HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "messages": [
+        { 
+            "content": "Hello"
+        }
+    ]
+}

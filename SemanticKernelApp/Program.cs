@@ -146,8 +146,7 @@ app.MapPost("/stream", async (HttpContext context, Request req) =>
 {
     Console.WriteLine($"Message received: {req.messages.First().content}");
     context.Response.ContentType = "application/jsonl";
-    // Initial JSON container start
-    await context.Response.BodyWriter.WriteAsync(System.Text.Encoding.UTF8.GetBytes("{"));
+   
     // Invoke the prompt
     await foreach (var chunk in kernel.InvokeStreamingAsync(function, arguments: new()
     {
@@ -155,15 +154,13 @@ app.MapPost("/stream", async (HttpContext context, Request req) =>
         { "user_question", req.messages.First().content },
     })) 
     {
-        var deltaContent = $"\"delta\": {JsonSerializer.Serialize(new ResponseMessage(content: chunk.ToString() ?? string.Empty))},\n";
+        var deltaContent = JsonSerializer.Serialize(new ResponseDelta(new ResponseMessage(content: chunk.ToString() ?? string.Empty)));
         var bytes = System.Text.Encoding.UTF8.GetBytes(deltaContent);
         Console.WriteLine($"Content received: {deltaContent}");
         //JsonSerializer.Serialize(new ResponseType(new ResponseMessage(content: chunk.ToString() ?? string.Empty)
         await context.Response.BodyWriter.WriteAsync(bytes);
         await context.Response.BodyWriter.FlushAsync();
     }
-    // Initial JSON container end
-    await context.Response.BodyWriter.WriteAsync(System.Text.Encoding.UTF8.GetBytes("}"));
 })
 .WithName("SteamMessage")
 .WithOpenApi()

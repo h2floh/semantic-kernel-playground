@@ -144,19 +144,20 @@ app.MapPost("/message", async (Request req) =>
 
 app.MapPost("/stream", async (HttpContext context, Request req) =>
 {
-    Console.WriteLine($"Message received: {req.messages.First().content}");
+    //Console.WriteLine($"Message received: {req.messages.Last().content}");
     context.Response.ContentType = "application/jsonl";
    
     // Invoke the prompt
     await foreach (var chunk in kernel.InvokeStreamingAsync(function, arguments: new()
     {
         { "rag_helper" , ragHelper },
-        { "user_question", req.messages.First().content },
+        { "user_question", req.messages.Last().content },
     })) 
     {
-        var deltaContent = JsonSerializer.Serialize(new ResponseDelta(new ResponseMessage(content: chunk.ToString() ?? string.Empty)));
+        var encodedUrl = chunk.ToString() ?? string.Empty;
+        var deltaContent = JsonSerializer.Serialize(new ResponseDelta(new ResponseMessage(content: encodedUrl))) + "\n";
         var bytes = System.Text.Encoding.UTF8.GetBytes(deltaContent);
-        Console.WriteLine($"Content received: {deltaContent}");
+        // Console.WriteLine($"Content received: {deltaContent}");
         //JsonSerializer.Serialize(new ResponseType(new ResponseMessage(content: chunk.ToString() ?? string.Empty)
         await context.Response.BodyWriter.WriteAsync(bytes);
         await context.Response.BodyWriter.FlushAsync();
